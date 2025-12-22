@@ -6,8 +6,7 @@
 ---
 
 ## 👤 Author
-**Rizky Ajie Kurniawan**
-**rizkyak994@gmail.com**
+**Rizky Ajie Kurniawan | rizkyak994@gmail.com**
 
 ---
 
