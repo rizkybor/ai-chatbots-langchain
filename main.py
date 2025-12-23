@@ -95,24 +95,59 @@ def format_marketing_response(text: str) -> str:
                         {title}
                     </div>
 
-                    <button onclick="navigator.clipboard.writeText(
-                        document.getElementById('{element_id}').innerText
-                    )"
-                    style="
-                        display:flex;
-                        align-items:center;
-                        gap:6px;
-                        padding:4px 10px;
-                        font-size:12px;
-                        font-weight:500;
-                        color:#e6e7eb;
-                        background:rgba(255,255,255,0.04);
-                        border:1px solid rgba(255,255,255,0.08);
-                        border-radius:999px;
-                        cursor:pointer;
-                    ">
-                        ⧉ Copy
-                    </button>
+                 <button
+    onclick="
+        navigator.clipboard.writeText(
+            document.getElementById('{element_id}').innerText
+        ).then(() => {{
+            const originalText = this.innerHTML;
+            const originalBg = this.style.background;
+            const originalBorder = this.style.borderColor;
+
+            this.innerHTML = '✓ Copied';
+            this.style.background = 'rgba(34,197,94,0.25)';
+            this.style.borderColor = 'rgba(34,197,94,0.6)';
+
+            setTimeout(() => {{
+                this.innerHTML = originalText;
+                this.style.background = originalBg;
+                this.style.borderColor = originalBorder;
+            }}, 1500);
+        }});
+    "
+    style="
+        display:flex;
+        align-items:center;
+        gap:6px;
+        padding:4px 10px;
+        font-size:12px;
+        font-weight:500;
+        color:#e6e7eb;
+        background:rgba(255,255,255,0.04);
+        border:1px solid rgba(255,255,255,0.08);
+        border-radius:999px;
+        cursor:pointer;
+
+        transition:
+            background 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.1s ease,
+            box-shadow 0.1s ease;
+    "
+    onmouseover="this.style.background='rgba(255,255,255,0.12)';
+                 this.style.borderColor='rgba(255,255,255,0.25)'"
+    onmouseout="this.style.background='rgba(255,255,255,0.04)';
+                this.style.borderColor='rgba(255,255,255,0.08)';
+                this.style.transform='scale(1)';
+                this.style.boxShadow='none'"
+    onmousedown="this.style.transform='scale(0.96)';
+                  this.style.boxShadow='0 2px 8px rgba(0,0,0,0.25)'"
+    onmouseup="this.style.transform='scale(1)'"
+>
+    ⧉ Copy
+</button>
+
+
                 </div>
 
                 <div id="{element_id}" style="
