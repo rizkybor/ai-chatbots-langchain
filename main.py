@@ -360,15 +360,15 @@ div[data-testid="stChatInput"] textarea {{
 if not has_interaction:
     st.markdown("""
     <div class="hero-title">
-        <span class="hero-highlight">Search Engine</span>
+        <span class="hero-highlight">🕵🏼‍♂️ Search Engine</span>
         <span class="hero-muted">Assistant</span>
     </div>
 
     <div class="hero-subtitle">
         Asisten AI untuk memberikan referensi <b>SEO Title</b>, <b>Meta Description</b>,
-        <b>Hashtag</b>, dan <b>CTA</b> secara instan dari satu input.
+        <b>Hashtag</b>, dan <b>CTA</b> secara instan dalam satu input.
         <br><br>
-        by <a href="https://github.com/rizkybor" target="_blank" class="hero-link">
+        👾 <a href="https://github.com/rizkybor" target="_blank" class="hero-link">
         Rizky Ajie Kurniawan</a>
         <br><br>
                 Contoh Input : <br>
