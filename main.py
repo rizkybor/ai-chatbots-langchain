@@ -3,6 +3,27 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # =========================================================
+# VALIDATION CONFIG
+# =========================================================
+ALLOWED_KEYWORDS = [
+    "jasa", "produk", "bisnis", "usaha", "brand",
+    "toko", "layanan", "service", "agency",
+    "marketing", "seo", "digital", "online",
+    "website", "aplikasi", "skincare", "makanan",
+    "travel", "tour", "konstruksi", "renovasi"
+]
+
+INVALID_CONTEXT_RESPONSE = """
+Input Anda belum sesuai dengan konteks **Search Engine Assistant**,
+Silakan masukkan topik **Produk, Jasa, atau Bisnis**.
+
+Contoh Inputan: Jasa renovasi rumah, Produk skincare anti aging, Jasa pembuatan website UMKM, Travel umroh terpercaya
+
+Gunakan kata benda atau frasa singkat (bukan pertanyaan).
+"""
+
+
+# =========================================================
 # PAGE CONFIG
 # =========================================================
 st.set_page_config(
@@ -56,6 +77,23 @@ if "GROQ_API_KEY" not in os.environ:
     st.stop()
 
 from llm import generate_marketing_content
+
+def is_marketing_context(prompt: str) -> bool:
+    prompt = prompt.lower().strip()
+
+    if len(prompt) > 80:
+        return False
+
+    forbidden_patterns = [
+        "import ", "def ", "{", "}", "<", ">", 
+        "http", "www", "pip install", "SELECT "
+    ]
+    if any(p in prompt for p in forbidden_patterns):
+        return False
+
+    return any(keyword in prompt for keyword in ALLOWED_KEYWORDS)
+
+
 def format_marketing_response(text: str) -> str:
     text = text.replace("**", "").strip()
 
@@ -96,67 +134,64 @@ def format_marketing_response(text: str) -> str:
                     </div>
 
                  <button
-    onclick="
-        navigator.clipboard.writeText(
-            document.getElementById('{element_id}').innerText
-        ).then(() => {{
-            const originalText = this.innerHTML;
-            const originalBg = this.style.background;
-            const originalBorder = this.style.borderColor;
+                    onclick="
+                        navigator.clipboard.writeText(
+                            document.getElementById('{element_id}').innerText
+                        ).then(() => {{
+                            const originalText = this.innerHTML;
+                            const originalBg = this.style.background;
+                            const originalBorder = this.style.borderColor;
 
-            this.innerHTML = '✓ Copied';
-            this.style.background = 'rgba(34,197,94,0.25)';
-            this.style.borderColor = 'rgba(34,197,94,0.6)';
+                            this.innerHTML = '✓ Copied';
+                            this.style.background = 'rgba(34,197,94,0.25)';
+                            this.style.borderColor = 'rgba(34,197,94,0.6)';
 
-            setTimeout(() => {{
-                this.innerHTML = originalText;
-                this.style.background = originalBg;
-                this.style.borderColor = originalBorder;
-            }}, 1500);
-        }});
-    "
-    style="
-        display:flex;
-        align-items:center;
-        gap:6px;
-        padding:4px 10px;
-        font-size:12px;
-        font-weight:500;
-        color:#e6e7eb;
-        background:rgba(255,255,255,0.04);
-        border:1px solid rgba(255,255,255,0.08);
-        border-radius:999px;
-        cursor:pointer;
+                            setTimeout(() => {{
+                                this.innerHTML = originalText;
+                                this.style.background = originalBg;
+                                this.style.borderColor = originalBorder;
+                            }}, 1500);
+                        }});
+                                "
+                                style="
+                                    display:flex;
+                                    align-items:center;
+                                    gap:6px;
+                                    padding:4px 10px;
+                                    font-size:12px;
+                                    font-weight:500;
+                                    color:#e6e7eb;
+                                    background:rgba(255,255,255,0.04);
+                                    border:1px solid rgba(255,255,255,0.08);
+                                    border-radius:999px;
+                                    cursor:pointer;
 
-        transition:
-            background 0.2s ease,
-            border-color 0.2s ease,
-            transform 0.1s ease,
-            box-shadow 0.1s ease;
-    "
-    onmouseover="this.style.background='rgba(255,255,255,0.12)';
-                 this.style.borderColor='rgba(255,255,255,0.25)'"
-    onmouseout="this.style.background='rgba(255,255,255,0.04)';
-                this.style.borderColor='rgba(255,255,255,0.08)';
-                this.style.transform='scale(1)';
-                this.style.boxShadow='none'"
-    onmousedown="this.style.transform='scale(0.96)';
-                  this.style.boxShadow='0 2px 8px rgba(0,0,0,0.25)'"
-    onmouseup="this.style.transform='scale(1)'"
->
-    ⧉ Copy
-</button>
-
-
-                </div>
-
-                <div id="{element_id}" style="
-                    font-size:14px;
-                    line-height:1.65;
-                    color:#e6e7eb;
-                ">
-                    {content}
-                </div>
+                                    transition:
+                                        background 0.2s ease,
+                                        border-color 0.2s ease,
+                                        transform 0.1s ease,
+                                        box-shadow 0.1s ease;
+                                "
+                                onmouseover="this.style.background='rgba(255,255,255,0.12)';
+                                            this.style.borderColor='rgba(255,255,255,0.25)'"
+                                onmouseout="this.style.background='rgba(255,255,255,0.04)';
+                                            this.style.borderColor='rgba(255,255,255,0.08)';
+                                            this.style.transform='scale(1)';
+                                            this.style.boxShadow='none'"
+                                onmousedown="this.style.transform='scale(0.96)';
+                                            this.style.boxShadow='0 2px 8px rgba(0,0,0,0.25)'"
+                                onmouseup="this.style.transform='scale(1)'"
+                            >
+                                ⧉ Copy
+                            </button>
+                        </div>
+                        <div id="{element_id}" style="
+                            font-size:14px;
+                            line-height:1.65;
+                            color:#e6e7eb;
+                        ">
+                            {content}
+                    </div>
             </div>
             """
 
@@ -352,11 +387,18 @@ for msg in st.session_state.messages:
             st.markdown(f"<div class='chat-user'>{msg['content']}</div>", unsafe_allow_html=True)
     else:
         with st.chat_message("assistant"):
-            components.html(
-                format_marketing_response(msg["content"]),
-                height=520,
-                scrolling=True
-            )
+
+            # JIKA PESAN VALIDASI → TAMPILKAN TEKS BIASA
+            if msg.get("type") == "validation":
+                st.markdown(msg["content"])
+
+            # JIKA OUTPUT AI → TAMPILKAN CARD SEO
+            else:
+                components.html(
+                    format_marketing_response(msg["content"]),
+                    height=520,
+                    scrolling=True
+                )
 
 # =========================================================
 # INPUT
@@ -366,8 +408,26 @@ prompt = st.chat_input(
 )
 
 if prompt:
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({
+        "role": "user",
+        "content": prompt
+    })
+
+    if not is_marketing_context(prompt):
+        st.session_state.messages.append({
+            "role": "assistant",
+        "type": "validation", 
+        "content": INVALID_CONTEXT_RESPONSE
+
+        })
+        st.rerun()
+
     with st.spinner("Generating marketing content..."):
         response = generate_marketing_content(prompt)
-    st.session_state.messages.append({"role": "assistant", "content": response})
+
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": response
+    })
     st.rerun()
+
