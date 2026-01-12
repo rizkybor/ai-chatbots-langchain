@@ -1,6 +1,32 @@
 import os
 import streamlit as st
 import streamlit.components.v1 as components
+import json
+
+HISTORY_FILE = "chat_history.json"
+MESSAGES_FILE = "chat_messages.json"
+
+def load_messages():
+    if os.path.exists(MESSAGES_FILE):
+        with open(MESSAGES_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+def save_messages(messages):
+    with open(MESSAGES_FILE, "w", encoding="utf-8") as f:
+        json.dump(messages, f, ensure_ascii=False, indent=2)
+
+
+def load_history():
+    if os.path.exists(HISTORY_FILE):
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+def save_history(history):
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+
 
 # =========================================================
 # VALIDATION CONFIG
@@ -211,8 +237,12 @@ def format_marketing_response(text: str) -> str:
 # =========================================================
 # SESSION STATE
 # =========================================================
+
+if "history" not in st.session_state:
+    st.session_state.history = load_history()
+
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = load_messages()
 
 has_interaction = len(st.session_state.messages) > 0
 
@@ -246,16 +276,86 @@ st.markdown(f"""
 
             
 /* ===== HIDE STREAMLIT SIDEBAR ===== */
+# section[data-testid="stSidebar"] {{
+#     display: none;
+# }}
+
+# div[data-testid="stSidebarNav"] {{
+#     display: none;
+# }}
+
+# button[data-testid="baseButton-header"] {{
+#     display: none;
+# }}
+/* ================================= */
+            
+
+/* ===== SIDEBAR SCROLLABLE & RESPONSIVE ===== */
 section[data-testid="stSidebar"] {{
-    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    background: linear-gradient(180deg,#1b1f33,#171a2b);
+    border-right: 1px solid rgba(255,255,255,0.06);
+    z-index: 100;
 }}
 
-div[data-testid="stSidebarNav"] {{
-    display: none;
+section[data-testid="stSidebar"] > div {{
+    padding: 20px 16px 40px 16px;
 }}
 
-button[data-testid="baseButton-header"] {{
-    display: none;
+/* scrollbar */
+section[data-testid="stSidebar"]::-webkit-scrollbar {{
+    width: 6px;
+}}
+
+section[data-testid="stSidebar"]::-webkit-scrollbar-thumb {{
+    background: rgba(255,255,255,0.25);
+    border-radius: 8px;
+}}
+
+section[data-testid="stSidebar"] {{
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.25) transparent;
+}}
+
+/* mobile */
+@media (max-width: 768px) {{
+    section[data-testid="stSidebar"] {{
+        width: 78vw;
+        min-width: 240px;
+        max-width: 300px;
+    }}
+}}
+
+/* ===== APP BASE ===== */
+.stApp {{
+    color: #e8e8e8;
+    font-family: Manrope, system-ui;
+}}
+
+header, footer {{ display:none; }}
+
+.block-container {{
+    max-width:760px;
+    margin:0 auto;
+    padding-top:{ "150px" if not has_interaction else "72px" };
+    padding-bottom:200px;
+}}
+
+/* ===== CHAT CLEANUP ===== */
+div[data-testid="stChatMessageAvatar"] {{
+    display: none !important;
+}}
+
+div[data-testid="stChatMessageContent"] {{
+    margin-left: 0 !important;
 }}
 /* ================================= */
 
@@ -368,8 +468,8 @@ if not has_interaction:
         Asisten AI untuk memberikan referensi <b>SEO Title</b>, <b>Meta Description</b>,
         <b>Hashtag</b>, dan <b>CTA</b> secara instan dalam satu input.
         <br><br>
-        👾 <a href="https://github.com/rizkybor" target="_blank" class="hero-link">
-        Rizky Ajie Kurniawan</a>
+        👾 <a href="https://www.jendelakode.com/" target="_blank" class="hero-link">
+       Jendela Kode</a>
         <br><br>
                 Contoh Input : <br>
         • Jasa renovasi rumah<br>
@@ -377,6 +477,96 @@ if not has_interaction:
         • Jasa pembuatan website
     </div>
     """, unsafe_allow_html=True)
+
+
+with st.sidebar:
+    col1, col2 = st.columns([4, 1])
+
+    with col1:
+        st.markdown("## 🕘 History")
+
+    with col2:
+        if st.button("🗑️", key="delete-history", help="Hapus semua history"):
+            # Hapus history dan messages
+            st.session_state.history = []
+            st.session_state.messages = []
+
+            if os.path.exists(HISTORY_FILE):
+                os.remove(HISTORY_FILE)
+            if os.path.exists(MESSAGES_FILE):
+                os.remove(MESSAGES_FILE)
+
+            st.success("History berhasil dihapus!")
+            st.rerun()  # <-- gunakan ini di Streamlit terbaru
+
+        # Styling tombol minimalis
+        st.markdown("""
+        <style>
+        div[data-testid="stSidebar"] button[kind="primary"] {
+            padding:4px !important;
+            font-size:14px !important;
+            width:32px !important;
+            height:32px !important;
+            border-radius:20% !important;
+            background-color:rgba(255,75,75,0.12) !important;
+            color:#ff4b4b !important;
+            border:none !important;
+            display:flex !important;
+            align-items:center !important;
+            justify-content:center !important;
+            transition: all 0.2s !important;
+        }
+        div[data-testid="stSidebar"] button[kind="primary"]:hover {
+            background-color: rgba(255,75,75,0.25) !important;
+            transform: scale(1.1) !important;
+        }
+        @media (max-width: 768px) {
+            div[data-testid="stSidebar"] button[kind="primary"] {
+                width:32px !important;
+                height:32px !important;
+                font-size:14px !important;
+                padding:4px !important;
+            }
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # Python side: cek klik tombol
+        if st.session_state.get("delete_history_click"):
+            st.session_state.history = []
+            st.session_state.messages = []
+
+            if os.path.exists(HISTORY_FILE):
+                os.remove(HISTORY_FILE)
+            if os.path.exists(MESSAGES_FILE):
+                os.remove(MESSAGES_FILE)
+
+            st.success("History berhasil dihapus!")
+            st.session_state._rerun()
+
+
+
+    # Tampilkan history
+    if not st.session_state.history:
+        st.caption("Belum ada history")
+
+    else:
+         for idx, item in enumerate(st.session_state.history):
+            if st.button(item, key=f"history-{idx}", use_container_width=True):
+                # LOAD MESSAGES YANG SESUAI DENGAN HISTORY ITEM
+                all_messages = load_messages()  # semua pesan
+                # filter messages sampai terakhir kali user input sama dengan history
+                messages_for_item = []
+                for msg in all_messages:
+                    messages_for_item.append(msg)
+                    if msg["role"] == "user" and msg["content"] == item:
+                        break
+
+                st.session_state.messages = messages_for_item
+                st.rerun()
+
+
+
 
 # =========================================================
 # CHAT HISTORY
@@ -408,26 +598,34 @@ prompt = st.chat_input(
 )
 
 if prompt:
-    st.session_state.messages.append({
-        "role": "user",
-        "content": prompt
-    })
+    # simpan user message
+    user_msg = {"role": "user", "content": prompt}
+    st.session_state.messages.append(user_msg)
+    save_messages(st.session_state.messages)  # simpan ke file
 
+    # simpan ke sidebar history (hindari duplikat)
+    if prompt not in st.session_state.history:
+        st.session_state.history.insert(0, prompt)
+        save_history(st.session_state.history)
+
+    # validasi konteks
     if not is_marketing_context(prompt):
-        st.session_state.messages.append({
+        validation_msg = {
             "role": "assistant",
-        "type": "validation", 
-        "content": INVALID_CONTEXT_RESPONSE
-
-        })
+            "type": "validation",
+            "content": INVALID_CONTEXT_RESPONSE
+        }
+        st.session_state.messages.append(validation_msg)
+        save_messages(st.session_state.messages)  # simpan validation
         st.rerun()
 
+    # generate konten marketing
     with st.spinner("Generating marketing content..."):
         response = generate_marketing_content(prompt)
 
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": response
-    })
+    ai_msg = {"role": "assistant", "content": response}
+    st.session_state.messages.append(ai_msg)
+    save_messages(st.session_state.messages)  # simpan AI message
     st.rerun()
+
 
